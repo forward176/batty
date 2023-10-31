@@ -17,34 +17,40 @@ def show_blocks():
     for x, y in blocks:
         screen.blit(block_img, block_img.get_rect(topleft=(x, y)))
 
-def collision(x_block, y_block):
-    d = dist(x_block, y_block, x_circle, y_circle)
+def collision(LEFT, TOP, RIGHT, BOTTOM):
+    d = dist(LEFT, TOP, x_circle, y_circle)
     if d <= radius_circle:
         return 1, 1    
-    d = dist(x_block + block_img.get_width(), y_block, x_circle, y_circle)
+    d = dist(RIGHT, TOP, x_circle, y_circle)
     if d <= radius_circle:    
         return 1, 1
-    d = dist(x_block, y_block + block_img.get_height(), x_circle, y_circle)
+    d = dist(LEFT, BOTTOM, x_circle, y_circle)
     if d <= radius_circle: 
         return 1, 1
-    d = dist(x_block + block_img.get_width(), y_block + block_img.get_height(), x_circle, y_circle)
+    d = dist(RIGHT, BOTTOM, x_circle, y_circle)
     if d <= radius_circle: 
         return 1, 1
     # левая стенка
-    if 0 < x_block - x_circle <= radius_circle and y_block <= y_circle <= y_block + block_img.get_height():
+    if 0 < LEFT - x_circle <= radius_circle and TOP <= y_circle <= BOTTOM:
         return 1, 0
     # правая стенка
+    if 0 < x_circle - RIGHT <= radius_circle and TOP <= y_circle <= BOTTOM:
+        return 1, 0
     # верхняя стенка
+    if 0 < TOP - y_circle <= radius_circle and LEFT <= x_circle <= RIGHT:
+        return 0, 1
     # нижняя стенка
-
-
+    if 0 < y_circle - BOTTOM <= radius_circle and LEFT <= x_circle <= RIGHT:
+        return 0, 1
+    return 0, 0
+ 
 def dist(X1, Y1, X2, Y2):
     x = X2 - X1
     y = Y2 - Y1
     c = (x**2 + y**2)**0.5
     return c
 
-FPS = 60
+FPS = 120
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
@@ -71,11 +77,16 @@ y_platform = SCREEN_HEIGHT // 4 * 3
 
 speed_platform = 0
 
-x_circle = 200
-y_circle = 500
 
-v_x = -5
-v_y = -5
+def set_start():
+    global x_circle, y_circle, v_x, v_y
+    x_circle = 200
+    y_circle = 500
+    v_x = -3
+    v_y = -3
+
+
+set_start()
 
 while True:
     clock.tick(FPS)
@@ -87,11 +98,15 @@ while True:
                 speed_platform -= 6
             if event.key == pygame.K_RIGHT:
                 speed_platform += 6
+            if event.key == pygame.K_TAB:
+                set_start()
+                blocks = create_blocks()
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_LEFT:
                 speed_platform += 6
             if event.key == pygame.K_RIGHT:
                 speed_platform -= 6
+            
 
     # шарик
     x_circle += v_x
@@ -108,6 +123,8 @@ while True:
     if y_circle > SCREEN_HEIGHT - radius_circle:
         y_circle = SCREEN_HEIGHT - radius_circle
         x_circle = SCREEN_WIDTH // 2
+        v_y = 0
+        v_x = 0
     
     # платформа
     x_platform += speed_platform
@@ -119,12 +136,30 @@ while True:
     # шарик и платформа (столкновение)
     # TODO Дописать условие сталкновения с платформой (бока + не проваливаться + разные углы)
     higher_than_platform = x_platform - platform_img.get_width() // 2 <= x_circle <= x_platform + platform_img.get_width() // 2
-    if 0 <= y_platform - y_circle <= radius_circle and higher_than_platform:
+    if 0 <= y_platform - platform_img.get_height() - y_circle <= radius_circle and higher_than_platform:
         v_y = - v_y
         y_circle += v_y
-
+    # qx, qy = collision(
+    #         x_platform - platform_img.get_width() // 2, 
+    #         y_platform - platform_img.get_height() // 2, 
+    #         x_platform + platform_img.get_width() // 2, 
+    #         y_platform + platform_img.get_height() // 2
+    #     )
+    # if qx == 1:
+    #     v_x = -v_x        
+    # if qy == 1:
+    #     v_y = -v_y
     # шарик и блоки (столкновение)
-    
+    for x_block, y_block in blocks:
+        qx, qy = collision(x_block, y_block, x_block + block_img.get_width(), y_block + block_img.get_height())
+        if qx == qy == 0:
+            continue
+        if qx == 1:
+            v_x = -v_x
+        if qy == 1:
+            v_y = -v_y
+        blocks.remove((x_block, y_block))
+        break
 
     screen.fill(BLACK)
     screen.blit(platform_img, platform_img.get_rect(center=(x_platform, y_platform)))
