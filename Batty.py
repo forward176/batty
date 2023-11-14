@@ -1,13 +1,14 @@
 import pygame
 
+
 def create_blocks():
-    global block_img
+    global block_img, space_between_blocks
     blocks = []
-    space_between_blocks = 25
-    rows = 10 + level
-    while y_platform - 3 * space_between_blocks < rows * (block_img.get_height() + space_between_blocks):
+    rows = 20 + level
+    while FIELD_HEIGHT - 2 * space_between_blocks < rows * (block_img.get_height() + space_between_blocks):
         block_img = pygame.transform.scale(block_img, (block_img.get_width() * 0.9, block_img.get_height() * 0.9))
-        
+        space_between_blocks *= 0.9
+    space_between_blocks = int(space_between_blocks)
     colums = (SCREEN_WIDTH - space_between_blocks) // (block_img.get_width() + space_between_blocks)
     border_space = (SCREEN_WIDTH - (colums * (block_img.get_width() + space_between_blocks) - space_between_blocks)) // 2
     
@@ -58,7 +59,7 @@ def dist(X1, Y1, X2, Y2):
     c = (x**2 + y**2)**0.5
     return c
 
-FPS = 120 
+FPS = 60
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
@@ -79,19 +80,19 @@ platform_img = pygame.transform.scale(platform_img, (200, 40))
 
 block_img = pygame.image.load('images\\block.png').convert()
 block_img = pygame.transform.scale(block_img, (100, 50))
-radius_circle = 15
-
-
+radius_circle = 12
+space_between_blocks = 25
+FIELD_HEIGHT = SCREEN_HEIGHT // 4 * 3
 
 speed_platform = 0
 
 
 def set_start():
-    global x_circle, y_circle, v_x, v_y, x_platform, y_platform, blocks, freeze_flag
-    x_circle = SCREEN_WIDTH // 2
-    y_circle = SCREEN_HEIGHT // 4 * 3 -20
+    global x_circle, y_circle, v_x, v_y, x_platform, y_platform, blocks, freeze_flag  
     x_platform = SCREEN_WIDTH // 2
-    y_platform = SCREEN_HEIGHT // 4 * 3
+    y_platform = FIELD_HEIGHT + 100
+    x_circle = x_platform
+    y_circle = y_platform - radius_circle - platform_img.get_height() // 2
     v_x = -3
     v_y = -3
     blocks = create_blocks()
@@ -206,3 +207,4 @@ while True:
     if freeze_flag:
         pygame.time.delay(3000)
         freeze_flag = False
+    print(level)
