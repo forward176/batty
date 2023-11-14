@@ -4,7 +4,7 @@ import pygame
 def create_blocks():
     global block_img, space_between_blocks
     blocks = []
-    rows = 20 + level
+    rows = 2 + level
     while FIELD_HEIGHT - 2 * space_between_blocks < rows * (block_img.get_height() + space_between_blocks):
         block_img = pygame.transform.scale(block_img, (block_img.get_width() * 0.9, block_img.get_height() * 0.9))
         space_between_blocks *= 0.9
@@ -76,7 +76,7 @@ clock = pygame.time.Clock()
 level = 1
 
 platform_img = pygame.image.load('images\\platform.png').convert()
-platform_img = pygame.transform.scale(platform_img, (200, 40))
+platform_img = pygame.transform.scale(platform_img, (200, 28))
 
 block_img = pygame.image.load('images\\block.png').convert()
 block_img = pygame.transform.scale(block_img, (100, 50))
@@ -96,6 +96,8 @@ def set_start():
     v_x = -3
     v_y = -3
     blocks = create_blocks()
+    screen.fill(BLACK)
+    show_blocks()
     freeze_flag = False
 
 
@@ -119,6 +121,8 @@ while True:
             if event.key == pygame.K_RIGHT:
                 speed_platform -= 6
             
+    pygame.draw.circle(screen, BLACK, (x_circle,y_circle), radius = radius_circle)
+    pygame.draw.rect(screen,BLACK, platform_img.get_rect(center=(x_platform, y_platform)))
 
     # шарик
     x_circle += v_x
@@ -146,11 +150,6 @@ while True:
         x_platform = platform_img.get_width() // 2
 
     # шарик и платформа (столкновение)
-    # TODO Дописать условие сталкновения с платформой (бока + не проваливаться + разные углы)
-    # higher_than_platform = x_platform - platform_img.get_width() // 2 <= x_circle <= x_platform + platform_img.get_width() // 2
-    # if 0 <= y_platform - y_circle <= radius_circle and higher_than_platform:
-    #     v_y = - v_y
-    #     y_circle += v_y
     qx, qy = collision(
             x_platform - platform_img.get_width() // 2, 
             y_platform - platform_img.get_height() // 2, 
@@ -183,6 +182,7 @@ while True:
         y_circle += v_y * rebound_coefficient
 
     # шарик и блоки (столкновение)
+    # TODO изменить логику столкновений с блоками, чтобы без цикла искать столкновение
     for x_block, y_block in blocks:
         qx, qy = collision(x_block, y_block, x_block + block_img.get_width(), y_block + block_img.get_height())
         if qx == qy == 0:
@@ -192,19 +192,17 @@ while True:
         if qy != 0:
             v_y = -v_y
         blocks.remove((x_block, y_block))
+        pygame.draw.rect(screen, BLACK, (x_block, y_block, block_img.get_width(), block_img.get_height()))
         break
     if not blocks:
         level += 1
         set_start()
         freeze_flag = True
-    screen.fill(BLACK)
-    screen.blit(platform_img, platform_img.get_rect(center=(x_platform, y_platform)))
     
-    show_blocks()
+    screen.blit(platform_img, platform_img.get_rect(center=(x_platform, y_platform)))
     pygame.draw.circle(screen, RED, (x_circle,y_circle), radius = radius_circle)
     pygame.display.update()
 
     if freeze_flag:
         pygame.time.delay(3000)
         freeze_flag = False
-    print(level)
