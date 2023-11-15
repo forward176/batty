@@ -229,5 +229,5 @@ while True:
     pygame.display.update()
 
     if freeze_flag:
-        pygame.time.delay(2500)
+        pygame.time.delay(2400)
         freeze_flag = False
